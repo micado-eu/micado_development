@@ -26,7 +26,7 @@ To set up the development environment, follow these steps:
 Download and execute the `clone_micado_development.sh` script to clone the `micado_development` repository:
 
 ```bash
-wget https://raw.githubusercontent.com/micado-eu/micado_development/main/clone_micado_development.sh
+wget --no-cache https://raw.githubusercontent.com/micado-eu/micado_development/main/clone_micado_development.sh
 chmod +x clone_micado_development.sh
 ./clone_micado_development.sh
 ```
