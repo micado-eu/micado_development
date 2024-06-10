@@ -275,13 +275,21 @@ services:
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
       BOT_NAME: ${BOT_NAME}
-    image: ghcr.io/micado-eu/migrant_application:${MIGRANTS_IMAGE_TAG}
+    image: micadoproject/quasar:1.1.2
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: migrants_app
+        target: /code
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    command: /bin/sh -c "npm install && quasar dev -m pwa"
     pull_policy: always
     labels:
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_migrant:/var/www/html
     <<: *generic
 
   data_pa:
@@ -327,8 +335,12 @@ services:
 
   # BACKEND COMPONENTS
   backend:
-    image: ghcr.io/micado-eu/backend:${MICADO_BACKEND_IMAGE_TAG}
-    pull_policy: always
+    image: micadoproject/micado_backend:18.19.1
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+    command: /bin/sh -c "bash"
     env_file:
       - .env
     environment:
@@ -368,6 +380,10 @@ services:
       - type: volume
         source: translations_dir
         target: ${MICADO_TRANSLATIONS_DIR}
+      - type: volume
+        source: backend
+        target: /code
+    tmpfs: /tmp/translations
     labels:
       com.centurylinklabs.watchtower.enable: "false" 
       traefik.enable: "true"
@@ -396,8 +412,6 @@ services:
       micado_db:
         condition: service_healthy
         restart: true
-    #    ports:
-    #      - "3001:3000"
     <<: *generic
 
   git:               # GIT SERVER
@@ -437,13 +451,12 @@ services:
         condition: service_healthy
         restart: true
 
-  #      
   weblate:
     image: weblate/weblate:${WEBLATE_IMAGE_TAG}
     volumes:
       - weblate_data:/app/data
-      - ./weblate/0007_use_trigram.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0007_use_trigram.py
-      - ./weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
+      - ./backend/weblate/0007_use_trigram.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0007_use_trigram.py
+      - ./baackend/weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
     environment:
       WEBLATE_EMAIL_HOST: ${WEBLATE_EMAIL_HOST}
       WEBLATE_EMAIL_HOST_USER: ${WEBLATE_EMAIL_HOST_USER}
@@ -616,6 +629,19 @@ volumes:
     driver_opts:
       type: none
       device: $PWD/translations_dir
+      o: bind
+  backend:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/backend/application
+      o: bind
+  migrants_app:
+    driver: local
+    driver_opts:
+      type: none
+      # device is the path in the host that has to be absolute
+      device: $PWD/migrants_application/app
       o: bind
 
 
