@@ -230,7 +230,6 @@ services:
       - "--global.sendAnonymousUsage=false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - traefik-certificates:/etc/traefik/acme
     ports:
       - "80:80"
       - "443:443"
@@ -383,7 +382,6 @@ services:
       - type: volume
         source: backend
         target: /code
-    tmpfs: /tmp/translations
     labels:
       com.centurylinklabs.watchtower.enable: "false" 
       traefik.enable: "true"
@@ -523,7 +521,6 @@ services:
 # ADMIN COMPONENTS
   portainer:
     image: portainer/portainer-ce:${PORTAINER_IMAGE_TAG}
-    container_name: portainer
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -619,12 +616,6 @@ volumes:
       type: none
       device: $PWD/shared_images
       o: bind
-  traefik-certificates:
-    driver: local
-    driver_opts:
-      type: none
-      device: $PWD/traefik/traefik-acme
-      o: bind
   translations_dir:
     driver_opts:
       type: none
@@ -641,7 +632,7 @@ volumes:
     driver_opts:
       type: none
       # device is the path in the host that has to be absolute
-      device: $PWD/migrants_application/app
+      device: $PWD/migrant_application/app
       o: bind
 
 
@@ -651,4 +642,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.24.0.0/16
+        - subnet: 172.26.0.0/16
