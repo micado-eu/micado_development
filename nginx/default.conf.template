@@ -1,0 +1,103 @@
+  server { # simple reverse-proxy for migrants application
+    listen       ${NGINX_PORT};
+    server_name  ${MIGRANTS_HOSTNAME};
+
+    # serve static files
+    location /  {
+      root    /usr/share/nginx/html/migrants;
+      try_files $uri $uri/ /index.html;
+    }
+
+    location /micado_img/ {
+      alias /usr/share/nginx/html/images/;
+    }
+  }
+
+  server { # simple reverse-proxy for pa application
+    listen       ${NGINX_PORT};
+    server_name  ${PA_HOSTNAME};
+
+    # serve static files
+    location /  {
+      root    /usr/share/nginx/html/pa;
+      try_files $uri $uri/ /index.html;
+    }
+    location /micado_img/ {
+      alias /usr/share/nginx/html/images/;
+    }
+  }
+
+  server { # simple reverse-proxy for ngo application
+    listen       ${NGINX_PORT};
+    server_name  ${NGO_HOSTNAME};
+
+    # serve static files
+    location /  {
+      root    /usr/share/nginx/html/ngo;
+      try_files $uri $uri/ /index.html;
+    }
+    location /micado_img/ {
+      alias /usr/share/nginx/html/images/;
+    }
+  }
+
+  server {
+  	listen   ${NGINX_PORT};
+  	listen   [::]:${NGINX_PORT} ipv6only=on;
+  	server_name  ${ANALYTIC_HOSTNAME};
+
+  	access_log  off;
+
+  	location = /i {
+          if ($http_content_type = "text/ping") {
+               return 404;
+          }
+      resolver 127.0.0.11 valid=10s;
+      set $upstream http://countly_api:3001;
+  		proxy_pass $upstream;
+  		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  		proxy_set_header X-Real-IP $remote_addr;
+  	}
+
+  	location ^~ /i/ {
+          if ($http_content_type = "text/ping") {
+               return 404;
+          }
+      resolver 127.0.0.11 valid=10s;
+      set $upstream http://countly_api:3001;
+  		proxy_pass $upstream;
+  		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  		proxy_set_header X-Real-IP $remote_addr;
+  	}
+
+  	location = /o {
+          if ($http_content_type = "text/ping") {
+               return 404;
+          }
+      resolver 127.0.0.11 valid=10s;
+      set $upstream http://countly_api:3001;
+  		proxy_pass $upstream;
+  	}
+
+  	location ^~ /o/ {
+          if ($http_content_type = "text/ping") {
+               return 404;
+          }
+      resolver 127.0.0.11 valid=10s;
+      set $upstream http://countly_api:3001;
+  		proxy_pass $upstream;
+  	}
+
+  	location / {
+          if ($http_content_type = "text/ping") {
+               return 404;
+          }
+      resolver 127.0.0.11 valid=10s;
+      set $upstream http://countly_frontend:6001;
+  		proxy_pass $upstream;
+#  		proxy_pass http://countly_frontend:6001;
+  		proxy_set_header Host $http_host;
+  		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  		proxy_set_header X-Real-IP $remote_addr;
+  	}
+  }
