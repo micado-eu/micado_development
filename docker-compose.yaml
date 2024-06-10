@@ -141,18 +141,18 @@ services:
     labels:
       com.centurylinklabs.watchtower.enable: "false"
       traefik.enable: "true"
-      traefik.http.routers.nginx.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      traefik.http.routers.nginx.entrypoints: web
-      traefik.http.routers.nginx.service: nginx
-      traefik.http.routers.nginx.middlewares: redirect@file
-      traefik.http.middlewares.redirect.redirectscheme.scheme: https
-      traefik.http.services.nginx.loadbalancer.server.port: 80
-      traefik.http.routers.nginx2.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      traefik.http.routers.nginx2.entrypoints: websecure
-      traefik.http.routers.nginx2.tls: "true"
-      traefik.http.routers.nginx2.tls.certresolver: letsencrypt
-      traefik.http.routers.nginx2.service: nginx2
-      traefik.http.services.nginx2.loadbalancer.server.port: 80
+      # traefik.http.routers.nginx.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      # traefik.http.routers.nginx.entrypoints: web
+      # traefik.http.routers.nginx.service: nginx
+      # traefik.http.routers.nginx.middlewares: redirect@file
+      # traefik.http.middlewares.redirect.redirectscheme.scheme: https
+      # traefik.http.services.nginx.loadbalancer.server.port: 80
+      # traefik.http.routers.nginx2.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      # traefik.http.routers.nginx2.entrypoints: websecure
+      # traefik.http.routers.nginx2.tls: "true"
+      # traefik.http.routers.nginx2.tls.certresolver: letsencrypt
+      # traefik.http.routers.nginx2.service: nginx2
+      # traefik.http.services.nginx2.loadbalancer.server.port: 80
       traefik.http.routers.nginx3.rule: Host(`${PA_HOSTNAME}`)
       traefik.http.routers.nginx3.entrypoints: web
       traefik.http.routers.nginx3.service: nginx3
@@ -289,6 +289,19 @@ services:
     labels:
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
+      traefik.enable: "true"
+      traefik.http.routers.migrant.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      traefik.http.routers.migrant.entrypoints: web
+      traefik.http.routers.migrant.service: migrant
+      traefik.http.routers.migrant.middlewares: redirect@file
+      traefik.http.middlewares.redirect.redirectscheme.scheme: https
+      traefik.http.services.migrant.loadbalancer.server.port: 8080
+      traefik.http.routers.migrant2.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      traefik.http.routers.migrant2.entrypoints: websecure
+      traefik.http.routers.migrant2.tls: "true"
+      traefik.http.routers.migrant2.tls.certresolver: letsencrypt
+      traefik.http.routers.migrant2.service: migrant2
+      traefik.http.services.migrant2.loadbalancer.server.port: 8080
     <<: *generic
 
   data_pa:
@@ -454,7 +467,7 @@ services:
     volumes:
       - weblate_data:/app/data
       - ./backend/weblate/0007_use_trigram.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0007_use_trigram.py
-      - ./baackend/weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
+      - ./backend/weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
     environment:
       WEBLATE_EMAIL_HOST: ${WEBLATE_EMAIL_HOST}
       WEBLATE_EMAIL_HOST_USER: ${WEBLATE_EMAIL_HOST_USER}
