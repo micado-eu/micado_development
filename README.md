@@ -741,6 +741,14 @@ In case he needs to develop the integration between one frontend and the backend
 
 The will be initialized using the folder in the backend/db_init folder from the backend repo that is used as the authoritative source of the data.
 
+## Clenaup
+
+To cleanup the development environment since the docker containers create some folders with users different from the current owner, the following command is advised.
+
+```
+sudo rm -fr * .*
+```
+
 ## Contribution
 
 Please submit pull requests or open issues to contribute to this repository.
