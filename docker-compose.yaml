@@ -84,7 +84,7 @@ services:
     restart: unless-stopped
     # for development we use the backend repository's keycloak folder
     volumes:
-      - ./backend/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./backend/keycloak/realms:/opt/keycloak/data/import
       - ./backend/keycloak/themes:/opt/keycloak/themes:ro
     depends_on:
       micado_db:
