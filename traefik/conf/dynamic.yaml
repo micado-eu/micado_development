@@ -1,0 +1,5 @@
+tls:
+  certificates:
+    - certFile: /configuration/certs/micado.local.crt
+      keyFile: /configuration/certs/micado.local.key
+
