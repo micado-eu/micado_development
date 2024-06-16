@@ -228,6 +228,8 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedByDefault=false"
+      - "--providers.file.directory=/configuration/conf"
+      - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
@@ -235,6 +237,7 @@ services:
       - "--global.sendAnonymousUsage=false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/:/configuration/
     ports:
       - "80:80"
       - "443:443"
@@ -278,7 +281,7 @@ services:
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
       BOT_NAME: ${BOT_NAME}
-    image: micadoproject/quasar:1.1.2
+    image: ghcr.io/micado-eu/quasar:2024
     stdin_open: true
     tty: true
     volumes:
