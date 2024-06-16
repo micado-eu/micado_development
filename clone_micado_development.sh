@@ -22,3 +22,8 @@ chmod +x setup_micado_repos.sh
 ./setup_micado_repos.sh
 
 echo "micado_development repository cloned, setup script executed, and additional repositories and directories set up."
+
+chmod +x create_micado_ca_and_micado_local_cert.sh
+
+./create_micado_ca_and_micado_local_cert.sh
+
