@@ -261,7 +261,6 @@ services:
  #     - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       docker_compose_diagram.cluster: Load Balancer
       docker_compose_diagram.icon: "diagrams.onprem.network.Traefik"
-    restart: unless-stopped
     <<: *generic
 
 
@@ -423,7 +422,6 @@ services:
       traefik.http.middlewares.backendcors.headers.addvaryheader: "true"    
       docker_compose_diagram.cluster: MICADO Backend
       docker_compose_diagram.icon: "diagrams.programming.language.Nodejs"
-    restart: unless-stopped
     depends_on:
       micado_db:
         condition: service_healthy
@@ -521,7 +519,6 @@ services:
 
   cache:
     image: redis:${REDIS_IMAGE_TAG}
-    restart: always
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
