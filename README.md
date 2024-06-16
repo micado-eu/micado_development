@@ -287,18 +287,6 @@ services:
       traefik.http.routers.countly.tls: "true"
       traefik.http.routers.countly.tls.certresolver: myresolver
       traefik.http.services.countly_service.loadbalancer.server.port: 80
-    #      - "traefik.http.routers.countly_api.rule=Host(`${ANALYTIC_HOSTNAME}`) && PathPrefix(`/i`)"
-    #      - "traefik.http.routers.countly_api.entrypoints=web"
-    #      - "traefik.http.routers.countly_api.service=countly_api_service"
-    #      - "traefik.http.services.countly_api_service.loadbalancer.server.port=3001"
-    #      - "traefik.http.routers.countly_api2.rule=Host(`${ANALYTIC_HOSTNAME}`) && PathPrefix(`/o`)"
-    #      - "traefik.http.routers.countly_api2.entrypoints=web"
-    #      - "traefik.http.routers.countly_api2.service=countly_api_service2"
-    #      - "traefik.http.services.countly_api_service2.loadbalancer.server.port=3001"
-    #      - "traefik.http.routers.countly_frontend.rule=Host(`${ANALYTIC_HOSTNAME}`)"
-    #      - "traefik.http.routers.countly_frontend.entrypoints=web"
-    #      - "traefik.http.routers.countly_frontend.service=countly_frontend_service"
-    #      - "traefik.http.services.countly_frontend_service.loadbalancer.server.port=6001"
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.onprem.network.Nginx"
     depends_on:
@@ -373,8 +361,6 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
-      COUNTLY_MIGRANTS_APP_KEY: ${COUNTLY_MIGRANTS_APP_KEY}
-      COUNTLY_MIGRANTS_APP_ID: ${COUNTLY_MIGRANTS_APP_ID}
       IDENTITY_SP_MIGRANTS_CLIENT_ID: ${IDENTITY_SP_MIGRANTS_CLIENT_ID}
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
@@ -396,7 +382,6 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
-      COUNTLY_PA_APP_KEY: ${COUNTLY_PA_APP_KEY}
       IDENTITY_SP_PA_CLIENT_ID: ${IDENTITY_SP_PA_CLIENT_ID}
       PA_HOSTNAME: ${PA_HOSTNAME}
     image: ghcr.io/micado-eu/pa_application:${PA_IMAGE_TAG}
@@ -675,12 +660,6 @@ volumes:
     driver: local
   data_site_ngo:
     driver: local
-  # mongo_data:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/mongo_data
-  #     o: bind
   weblate_data:
     driver: local
     driver_opts:
@@ -701,7 +680,6 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      # device is the path in the host that has to be absolute
       device: $PWD/portainer-data
       o: bind
   shared_images:
