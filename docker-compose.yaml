@@ -172,24 +172,6 @@ services:
       #traefik.http.routers.nginx6.tls.certresolver: myresolver
       traefik.http.routers.nginx6.service: nginx6
       traefik.http.services.nginx6.loadbalancer.server.port: 80
-      traefik.http.routers.countly.rule: Host(`${ANALYTIC_HOSTNAME}`)
-      traefik.http.routers.countly.entrypoints: websecure
-      traefik.http.routers.countly.service: countly_service
-      traefik.http.routers.countly.tls: "true"
-      #traefik.http.routers.countly.tls.certresolver: myresolver
-      traefik.http.services.countly_service.loadbalancer.server.port: 80
-    #      - "traefik.http.routers.countly_api.rule=Host(`${ANALYTIC_HOSTNAME}`) && PathPrefix(`/i`)"
-    #      - "traefik.http.routers.countly_api.entrypoints=web"
-    #      - "traefik.http.routers.countly_api.service=countly_api_service"
-    #      - "traefik.http.services.countly_api_service.loadbalancer.server.port=3001"
-    #      - "traefik.http.routers.countly_api2.rule=Host(`${ANALYTIC_HOSTNAME}`) && PathPrefix(`/o`)"
-    #      - "traefik.http.routers.countly_api2.entrypoints=web"
-    #      - "traefik.http.routers.countly_api2.service=countly_api_service2"
-    #      - "traefik.http.services.countly_api_service2.loadbalancer.server.port=3001"
-    #      - "traefik.http.routers.countly_frontend.rule=Host(`${ANALYTIC_HOSTNAME}`)"
-    #      - "traefik.http.routers.countly_frontend.entrypoints=web"
-    #      - "traefik.http.routers.countly_frontend.service=countly_frontend_service"
-    #      - "traefik.http.services.countly_frontend_service.loadbalancer.server.port=6001"
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.onprem.network.Nginx"
     depends_on:
@@ -268,8 +250,6 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
-      COUNTLY_MIGRANTS_APP_KEY: ${COUNTLY_MIGRANTS_APP_KEY}
-      COUNTLY_MIGRANTS_APP_ID: ${COUNTLY_MIGRANTS_APP_ID}
       IDENTITY_SP_MIGRANTS_CLIENT_ID: ${IDENTITY_SP_MIGRANTS_CLIENT_ID}
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
@@ -370,8 +350,6 @@ services:
       ROCKETCHAT_ADMIN: ${ROCKETCHAT_ADMIN}
       ROCKETCHAT_ADMIN_PWD: ${ROCKETCHAT_ADMIN_PWD}
       MICADO_TRANSLATIONS_DIR: ${MICADO_TRANSLATIONS_DIR}
-      COUNTLY_MIGRANTS_APP_ID: ${COUNTLY_MIGRANTS_APP_ID}
-      COUNTLY_MIGRANTS_API_KEY: ${COUNTLY_MIGRANTS_API_KEY}
       POSTGRES_DB: ${POSTGRES_DB}
       MICADO_DB_PWD: ${MICADO_DB_PWD}
       MICADO_DB_USER: ${MICADO_DB_USER}
@@ -383,8 +361,6 @@ services:
       WEBLATE_EMAIL_HOST_SSL: ${WEBLATE_EMAIL_HOST_SSL}
       WEBLATE_EMAIL_HOST_PASSWORD: ${WEBLATE_EMAIL_HOST_PASSWORD}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
-      COUNTLY_ADMIN: ${COUNTLY_ADMIN}
-      COUNTLY_ADMIN_PWD: ${COUNTLY_ADMIN_PWD}
       ALGORITHM: ${ALGORITHM}
       SALT: ${SALT}
       KEY_LENGTH: ${KEY_LENGTH}

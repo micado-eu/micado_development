@@ -281,12 +281,6 @@ services:
       traefik.http.routers.nginx6.tls.certresolver: myresolver
       traefik.http.routers.nginx6.service: nginx6
       traefik.http.services.nginx6.loadbalancer.server.port: 80
-      traefik.http.routers.countly.rule: Host(`${ANALYTIC_HOSTNAME}`)
-      traefik.http.routers.countly.entrypoints: websecure
-      traefik.http.routers.countly.service: countly_service
-      traefik.http.routers.countly.tls: "true"
-      traefik.http.routers.countly.tls.certresolver: myresolver
-      traefik.http.services.countly_service.loadbalancer.server.port: 80
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.onprem.network.Nginx"
     depends_on:
@@ -401,7 +395,6 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
-      COUNTLY_NGO_APP_KEY: ${COUNTLY_NGO_APP_KEY}
       IDENTITY_SP_NGO_CLIENT_ID: ${IDENTITY_SP_NGO_CLIENT_ID}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
     image: micadoproject/ngo_app_site:latest
@@ -427,8 +420,6 @@ services:
       ROCKETCHAT_ADMIN: ${ROCKETCHAT_ADMIN}
       ROCKETCHAT_ADMIN_PWD: ${ROCKETCHAT_ADMIN_PWD}
       MICADO_TRANSLATIONS_DIR: ${MICADO_TRANSLATIONS_DIR}
-      COUNTLY_MIGRANTS_APP_ID: ${COUNTLY_MIGRANTS_APP_ID}
-      COUNTLY_MIGRANTS_API_KEY: ${COUNTLY_MIGRANTS_API_KEY}
       POSTGRES_DB: ${POSTGRES_DB}
       MICADO_DB_PWD: ${MICADO_DB_PWD}
       MICADO_DB_USER: ${MICADO_DB_USER}
@@ -440,8 +431,6 @@ services:
       WEBLATE_EMAIL_HOST_SSL: ${WEBLATE_EMAIL_HOST_SSL}
       WEBLATE_EMAIL_HOST_PASSWORD: ${WEBLATE_EMAIL_HOST_PASSWORD}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
-      COUNTLY_ADMIN: ${COUNTLY_ADMIN}
-      COUNTLY_ADMIN_PWD: ${COUNTLY_ADMIN_PWD}
       ALGORITHM: ${ALGORITHM}
       SALT: ${SALT}
       KEY_LENGTH: ${KEY_LENGTH}
