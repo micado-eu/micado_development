@@ -12,7 +12,6 @@ services:
   # DATABASE STUFF
   micado_db:    # MICADO DB
     image: groonga/pgroonga:${PGROONGA_IMAGE_TAG}
-#    user: postgres
     env_file:
       - .env
     environment:
@@ -81,8 +80,11 @@ services:
       traefik.http.routers.keycloak.service: keycloak
       traefik.http.routers.keycloak.entrypoints: web,websecure
       traefik.http.services.keycloak.loadbalancer.server.port: "8080"  
+      traefik.http.routers.keycloak.middlewares: redirect-keycloak
+      traefik.http.middlewares.redirect-keycloak.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-keycloak.redirectscheme.scheme: https
       traefik.http.routers.keycloak.tls: "true"
-      traefik.http.routers.keycloak.tls.certresolver: letsencrypt
+      #traefik.http.routers.keycloak.tls.certresolver: letsencrypt
       traefik.http.services.keycloak.loadbalancer.passhostheader: "true"
       docker_compose_diagram.cluster: "Auth"  
       docker_compose_diagram.icon: "keycloak.png"
@@ -146,18 +148,6 @@ services:
     labels:
       com.centurylinklabs.watchtower.enable: "false"
       traefik.enable: "true"
-      # traefik.http.routers.nginx.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      # traefik.http.routers.nginx.entrypoints: web
-      # traefik.http.routers.nginx.service: nginx
-      # traefik.http.routers.nginx.middlewares: redirect@file
-      # traefik.http.middlewares.redirect.redirectscheme.scheme: https
-      # traefik.http.services.nginx.loadbalancer.server.port: 80
-      # traefik.http.routers.nginx2.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      # traefik.http.routers.nginx2.entrypoints: websecure
-      # traefik.http.routers.nginx2.tls: "true"
-      # traefik.http.routers.nginx2.tls.certresolver: letsencrypt
-      # traefik.http.routers.nginx2.service: nginx2
-      # traefik.http.services.nginx2.loadbalancer.server.port: 80
       traefik.http.routers.nginx3.rule: Host(`${PA_HOSTNAME}`)
       traefik.http.routers.nginx3.entrypoints: web
       traefik.http.routers.nginx3.service: nginx3
@@ -179,14 +169,14 @@ services:
       traefik.http.routers.nginx6.rule: Host(`${NGO_HOSTNAME}`)
       traefik.http.routers.nginx6.entrypoints: websecure
       traefik.http.routers.nginx6.tls: true"
-      traefik.http.routers.nginx6.tls.certresolver: myresolver
+      #traefik.http.routers.nginx6.tls.certresolver: myresolver
       traefik.http.routers.nginx6.service: nginx6
       traefik.http.services.nginx6.loadbalancer.server.port: 80
       traefik.http.routers.countly.rule: Host(`${ANALYTIC_HOSTNAME}`)
       traefik.http.routers.countly.entrypoints: websecure
       traefik.http.routers.countly.service: countly_service
       traefik.http.routers.countly.tls: "true"
-      traefik.http.routers.countly.tls.certresolver: myresolver
+      #traefik.http.routers.countly.tls.certresolver: myresolver
       traefik.http.services.countly_service.loadbalancer.server.port: 80
     #      - "traefik.http.routers.countly_api.rule=Host(`${ANALYTIC_HOSTNAME}`) && PathPrefix(`/i`)"
     #      - "traefik.http.routers.countly_api.entrypoints=web"
@@ -238,6 +228,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik/:/configuration/
+      - traefik-certificates:/etc/traefik/acme
     ports:
       - "80:80"
       - "443:443"
@@ -247,6 +238,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+    environment:
+      TRAEFIK_HOSTNAME: ${TRAEFIK_HOSTNAME}
     labels:
       traefik.enable: "true"
       traefik.http.routers.dashboard.rule: Host(`${TRAEFIK_HOSTNAME}`)
@@ -260,8 +253,8 @@ services:
 #      - "traefik.http.middlewares.authtraefik.basicauth.users=${TRAEFIK_BASIC_AUTH}"
 #      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
 #      - "traefik.http.routers.http-catchall.entrypoints=web"
- #     - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
- #     - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+#      traefik.http.routers.dashboard.middlewares: redirect-to-https
+#      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
       docker_compose_diagram.cluster: Load Balancer
       docker_compose_diagram.icon: "diagrams.onprem.network.Traefik"
     <<: *generic
@@ -300,15 +293,23 @@ services:
       traefik.http.routers.migrant.rule: Host(`${MIGRANTS_HOSTNAME}`)
       traefik.http.routers.migrant.entrypoints: web
       traefik.http.routers.migrant.service: migrant
-      traefik.http.routers.migrant.middlewares: redirect@file
-      traefik.http.middlewares.redirect.redirectscheme.scheme: https
+      traefik.http.routers.migrant.middlewares: redirect-migrant
+      traefik.http.middlewares.redirect-migrant.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-migrant.redirectscheme.scheme: https
       traefik.http.services.migrant.loadbalancer.server.port: 8080
       traefik.http.routers.migrant2.rule: Host(`${MIGRANTS_HOSTNAME}`)
       traefik.http.routers.migrant2.entrypoints: websecure
       traefik.http.routers.migrant2.tls: "true"
-      traefik.http.routers.migrant2.tls.certresolver: letsencrypt
+      #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
       traefik.http.routers.migrant2.service: migrant2
       traefik.http.services.migrant2.loadbalancer.server.port: 8080
+    depends_on:
+      micado_db:
+        condition: service_healthy
+        restart: true
+      traefik:
+        condition: service_healthy
+        restart: true
     <<: *generic
 
   data_pa:
@@ -407,7 +408,9 @@ services:
       traefik.enable: "true"
       traefik.http.routers.backend.rule: Host(`${API_HOSTNAME}`)
       traefik.http.routers.backend.entrypoints: web
-      traefik.http.routers.backend.middlewares: redirect@file
+      traefik.http.routers.backend.middlewares: redirect-backend
+      traefik.http.middlewares.redirect-backend.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-backend.redirectscheme.scheme: https
       traefik.http.routers.backend.service: backend_service
       traefik.http.services.backend_service.loadbalancer.server.port: 3000
       traefik.http.routers.backend_https.rule: Host(`${API_HOSTNAME}`)
@@ -500,9 +503,9 @@ services:
       traefik.http.routers.weblate.rule: Host(`${TRANSLATION_HOSTNAME}`)
       traefik.http.routers.weblate.entrypoints: web
       #      - "traefik.http.routers.weblate.service=weblate"
-     # - "traefik.http.routers.weblate.middlewares=redirect@file"
-      #      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
-      #      - "traefik.http.services.weblate.loadbalancer.server.port=8080"
+      traefik.http.routers.weblate.middlewares: redirect-weblate
+      traefik.http.middlewares.redirect-weblate.redirectscheme.scheme: https
+      traefik.http.services.weblate.loadbalancer.server.port: 8080
       traefik.http.routers.weblate2.rule: Host(`${TRANSLATION_HOSTNAME}`)
       traefik.http.routers.weblate2.entrypoints: websecure
       traefik.http.routers.weblate2.tls: "true"
@@ -599,12 +602,6 @@ volumes:
     driver: local
   data_site_ngo:
     driver: local
-  # mongo_data:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/mongo_data
-  #     o: bind
   weblate_data:
     driver: local
     driver_opts:
@@ -625,7 +622,6 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      # device is the path in the host that has to be absolute
       device: $PWD/portainer-data
       o: bind
   shared_images:
@@ -649,8 +645,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      # device is the path in the host that has to be absolute
       device: $PWD/migrant_application/app
+      o: bind
+  traefik-certificates:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/traefik/traefik-acme
       o: bind
 
 
