@@ -5,6 +5,7 @@ mkdir -p MicadoCA/newcerts
 mkdir -p MicadoCA/private
 mkdir -p MicadoCA/certs
 mkdir -p traefik/certs
+mkdir -p traefik/traefik-acme
 touch MicadoCA/index.txt
 echo 1000 > MicadoCA/serial
 
