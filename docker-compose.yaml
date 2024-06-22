@@ -97,94 +97,10 @@ services:
       micado_db:
         condition: service_healthy
         restart: true
-      traefik:
-        condition: service_healthy
-        restart: true
     <<: *generic
 
 
   ## Web components
-  nginx:         # WEB SERVER
-    image: openresty/openresty:${NGINX_IMAGE_TAG}
-    environment:
-      - MIGRANTS_HOSTNAME=${MIGRANTS_HOSTNAME}
-      - PA_HOSTNAME=${PA_HOSTNAME}
-      - NGO_HOSTNAME=${NGO_HOSTNAME}
-      - ANALYTIC_HOSTNAME=${ANALYTIC_HOSTNAME}
-      - RASA_HOSTNAME=${RASA_HOSTNAME}
-      - BOT_NAME=${BOT_NAME}
-      - NGINX_PORT=80
-    command: ["/run.sh"]
-    volumes:
-      #      - $PWD/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - $PWD/nginx/run.sh:/run.sh
-      - $PWD/nginx/customcss:/usr/share/nginx/html/customcss
-      - $PWD/nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf.template
-      #      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template
-      - type: volume
-        source: data_site_migrant
-        target: /usr/share/nginx/html/migrants
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: data_site_pa
-        target: /usr/share/nginx/html/pa
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: data_site_ngo
-        target: /usr/share/nginx/html/ngo
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: shared_images
-        target: /usr/share/nginx/html/images
-        read_only: true
-        volume:
-          nocopy: true
-    labels:
-      com.centurylinklabs.watchtower.enable: "false"
-      traefik.enable: "true"
-      traefik.http.routers.nginx3.rule: Host(`${PA_HOSTNAME}`)
-      traefik.http.routers.nginx3.entrypoints: web
-      traefik.http.routers.nginx3.service: nginx3
-      traefik.http.routers.nginx3.middlewares: redirect@file
-      traefik.http.middlewares.redirect_pa.redirectscheme.scheme: https
-      traefik.http.services.nginx3.loadbalancer.server.port: 80
-      traefik.http.routers.nginx4.rule: Host(`${PA_HOSTNAME}`)
-      traefik.http.routers.nginx4.entrypoints: websecure
-      traefik.http.routers.nginx4.tls: "true"
-      traefik.http.routers.nginx4.tls.certresolver: letsencrypt
-      traefik.http.routers.nginx4.service: nginx4
-      traefik.http.services.nginx4.loadbalancer.server.port: 80
-      traefik.http.routers.nginx5.rule: Host(`${NGO_HOSTNAME}`)
-      traefik.http.routers.nginx5.entrypoints: web
-      traefik.http.routers.nginx5.service: nginx5
-      traefik.http.routers.nginx5.middlewares: redirect@file
-      traefik.http.middlewares.redirect_ngo.redirectscheme.scheme: https
-      traefik.http.services.nginx5.loadbalancer.server.port: 80
-      traefik.http.routers.nginx6.rule: Host(`${NGO_HOSTNAME}`)
-      traefik.http.routers.nginx6.entrypoints: websecure
-      traefik.http.routers.nginx6.tls: true"
-      #traefik.http.routers.nginx6.tls.certresolver: myresolver
-      traefik.http.routers.nginx6.service: nginx6
-      traefik.http.services.nginx6.loadbalancer.server.port: 80
-      docker_compose_diagram.cluster: MICADO Frontend
-      docker_compose_diagram.icon: "diagrams.onprem.network.Nginx"
-    depends_on:
-      traefik:
-        condition: service_healthy
-        restart: true
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "-v", "http://nginx/healthcheck.html"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-    <<: *generic
-
   traefik:              # LOAD BALANCER
     image: traefik:${TRAEFIK_IMAGE_TAG}
     command:
@@ -215,7 +131,7 @@ services:
       - "80:80"
       - "443:443"
     healthcheck:
-      test: ["CMD", "wget", "http://localhost:8082/ping","--spider"]
+      test: traefik healthcheck --ping
       interval: 10s
       timeout: 5s
       retries: 3
@@ -228,15 +144,6 @@ services:
       traefik.http.routers.dashboard.service: api@internal
       traefik.http.routers.dashboard.entrypoints: web,websecure
       traefik.http.services.dashboard.loadbalancer.server.port: 8080
- #     - "traefik.http.routers.dashboard.tls=true"
- #     - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
- #     - "traefik.http.services.dashboard.loadbalancer.passhostheader=true"
-#      - "traefik.http.routers.dashboard.middlewares=authtraefik"
-#      - "traefik.http.middlewares.authtraefik.basicauth.users=${TRAEFIK_BASIC_AUTH}"
-#      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
-#      - "traefik.http.routers.http-catchall.entrypoints=web"
-#      traefik.http.routers.dashboard.middlewares: redirect-to-https
-#      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: https
       docker_compose_diagram.cluster: Load Balancer
       docker_compose_diagram.icon: "diagrams.onprem.network.Traefik"
     <<: *generic
@@ -265,7 +172,6 @@ services:
       - "8000:8000"
       - "8080:8080"
     command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
-    pull_policy: always
     labels:
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
@@ -303,13 +209,34 @@ services:
       COUNTLY_PA_APP_KEY: ${COUNTLY_PA_APP_KEY}
       IDENTITY_SP_PA_CLIENT_ID: ${IDENTITY_SP_PA_CLIENT_ID}
       PA_HOSTNAME: ${PA_HOSTNAME}
-    image: ghcr.io/micado-eu/pa_application:${PA_IMAGE_TAG}
-    pull_policy: always
+    image: ghcr.io/micado-eu/quasar:2024
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: pa_app
+        target: /code
+    ports:
+      - "8001:8000"
+      - "8081:8080"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
     labels:
+      traefik.enable: "true"
+      traefik.http.routers.pa.rule: Host(`${PA_HOSTNAME}`)
+      traefik.http.routers.pa.entrypoints: web
+      traefik.http.routers.pa.service: pa
+      traefik.http.routers.pa.middlewares: redirect-pa
+      traefik.http.middlewares.redirect-pa.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-pa.redirectscheme.scheme: https
+      traefik.http.services.pa.loadbalancer.server.port: 8080
+      traefik.http.routers.pa2.rule: Host(`${PA_HOSTNAME}`)
+      traefik.http.routers.pa2.entrypoints: websecure
+      traefik.http.routers.pa2.tls: "true"
+      #traefik.http.routers.pa2.tls.certresolver: letsencrypt
+      traefik.http.routers.pa2.service: pa2
+      traefik.http.services.pa2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_pa:/var/www/html
     <<: *generic
 
   data_ngo:
@@ -323,13 +250,34 @@ services:
       COUNTLY_NGO_APP_KEY: ${COUNTLY_NGO_APP_KEY}
       IDENTITY_SP_NGO_CLIENT_ID: ${IDENTITY_SP_NGO_CLIENT_ID}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
-    image: micadoproject/ngo_app_site:latest
-    pull_policy: always
+    image: ghcr.io/micado-eu/quasar:2024
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: migrants_app
+        target: /code
+    ports:
+      - "8002:8000"
+      - "8082:8080"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
     labels:
+      traefik.enable: "true"
+      traefik.http.routers.ngo.rule: Host(`${NGO_HOSTNAME}`)
+      traefik.http.routers.ngo.entrypoints: web
+      traefik.http.routers.ngo.service: ngo
+      traefik.http.routers.ngo.middlewares: redirect-ngo
+      traefik.http.middlewares.redirect-ngo.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-ngo.redirectscheme.scheme: https
+      traefik.http.services.ngo.loadbalancer.server.port: 8080
+      traefik.http.routers.ngo2.rule: Host(`${NGO_HOSTNAME}`)
+      traefik.http.routers.ngo2.entrypoints: websecure
+      traefik.http.routers.ngo2.tls: "true"
+      #traefik.http.routers.ngo2.tls.certresolver: letsencrypt
+      traefik.http.routers.ngo2.service: ngo2
+      traefik.http.services.ngo2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_ngo:/var/www/html
     <<: *generic
 
 
@@ -560,24 +508,6 @@ volumes:
       type: none
       device: $PWD/backend/db_init
       o: bind
-  # chatbot_action:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/rasa/actions
-  #     o: bind
-  # chatbot_data:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/rasa
-  #     o: bind
-  data_site_migrant:
-    driver: local
-  data_site_pa:
-    driver: local
-  data_site_ngo:
-    driver: local
   weblate_data:
     driver: local
     driver_opts:
@@ -622,6 +552,18 @@ volumes:
     driver_opts:
       type: none
       device: $PWD/migrant_application/app
+      o: bind
+  pa_app:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/pa_application/app
+      o: bind
+  ngo_app:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/ngo_application/app
       o: bind
   traefik-certificates:
     driver: local

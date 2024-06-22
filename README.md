@@ -37,7 +37,6 @@ This script will:
 3. Make the `setup_micado_repos.sh` script executable.
 4. Execute the `setup_micado_repos.sh` script to set up additional repositories and directories.
 
-
 The `setup_micado_repos.sh` script will:
 1. Clone the following repositories:
     - [backend](https://github.com/micado-eu/backend)
@@ -95,17 +94,54 @@ POSTGRES_PASSWORD=micado_pass
 POSTGRES_DB=micado_db
 KEYCLOAK_USER=admin
 KEYCLOAK_PASSWORD=admin
+PGROONGA_IMAGE_TAG=latest
+KEYCLOAK_IMAGE_TAG=latest
+NGINX_IMAGE_TAG=latest
+TRAEFIK_IMAGE_TAG=latest
+GITEA_IMAGE_TAG=latest
+WEBLATE_IMAGE_TAG=latest
+REDIS_IMAGE_TAG=latest
+PORTAINER_IMAGE_TAG=latest
+MIGRANTS_IMAGE_TAG=latest
+PA_IMAGE_TAG=latest
+API_HOSTNAME=api.micado.local
+IDENTITY_HOSTNAME=identity.micado.local
+MIGRANTS_HOSTNAME=migrants.micado.local
+PA_HOSTNAME=pa.micado.local
+NGO_HOSTNAME=ngo.micado.local
+MICADO_API_KEY=your_api_key
+IDENTITY_SP_MIGRANTS_CLIENT_ID=migrants_client_id
+IDENTITY_SP_PA_CLIENT_ID=pa_client_id
+IDENTITY_SP_NGO_CLIENT_ID=ngo_client_id
+TRAEFIK_HOSTNAME=traefik.micado.local
+TRAEFIK_ACME_EMAIL=your_email@example.com
+TRAEFIK_LOG_LEVEL=DEBUG
+MICADO_BACKEND_IMAGE_TAG=latest
+GIT_HOSTNAME=git.micado.local
+WEBLATE_SERVER_EMAIL=weblate@example.com
+WEBLATE_DEFAULT_FROM_EMAIL=weblate@example.com
+WEBLATE_ALLOWED_HOSTS=weblate.micado.local
+WEBLATE_ADMIN_PASSWORD=admin
+WEBLATE_ADMIN_NAME=admin
+WEBLATE_ADMIN_EMAIL=admin@example.com
+TRANSLATION_HOSTNAME=translation.micado.local
+WEBLATE_REGISTRATION_OPEN=true
+WEBLATE_POSTGRES_PASSWORD=postgres
+WEBLATE_POSTGRES_USER=postgres
+WEBLATE_POSTGRES_HOST=micado_db
+POSTGRES_PORT=5432
+TZ=Europe/Berlin
 ```
 
 ## Docker Compose
 
-The `docker-compose.yaml` file defines the Docker services for the Micado project. Below is an example of the `docker-compose.yaml` file:
+The `docker-compose.yaml` file defines the Docker services for the Micado project. Below is an overview of the `docker-compose.yaml` file:
 
 ```yaml
 version: "3.9"
 x-generic: &generic
   networks:
-    - micado_net
+    - micado_dev_net
   logging:
     options:
       max-size: "12m"
@@ -114,9 +150,8 @@ x-generic: &generic
 
 services:
   # DATABASE STUFF
-  micado_db:    # MICADO DB
+  micado_db:
     image: groonga/pgroonga:${PGROONGA_IMAGE_TAG}
-#    user: postgres
     env_file:
       - .env
     environment:
@@ -130,10 +165,6 @@ services:
       - type: volume
         source: postgres_init
         target: /docker-entrypoint-initdb.d
-    labels:
-      com.centurylinklabs.watchtower.enable: "false"
-      docker_compose_diagram.cluster: "Database"
-      docker_compose_diagram.icon: "diagrams.onprem.database.Postgresql"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       interval: 10s
@@ -142,7 +173,7 @@ services:
     <<: *generic
 
   # Identity management
-  keycloak:     # IDENTITY SERVER
+  keycloak:
     image: quay.io/keycloak/keycloak:${KEYCLOAK_IMAGE_TAG}
     command: ["start-dev", "--import-realm"]
     environment:
@@ -156,144 +187,19 @@ services:
       KC_REALM_NAME: ${KC_REALM_NAME}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      GF_URL: ${GF_HOSTNAME}:${GF_SERVER_HTTP_PORT}
-      GF_ADMIN_USERNAME: ${GF_ADMIN_USERNAME}
-      GF_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
-      KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: 'true'
-      KEYCLOAK_ENABLE_STATISTICS: 'true'
       KC_HOSTNAME: ${IDENTITY_HOSTNAME}
-      KC_PROXY: edge
-      KC_PROXY_ADDRESS_FORWARDING: 'true'
-      KC_HTTP_ENABLED: 'true'
-      MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
-      PA_HOSTNAME: ${PA_HOSTNAME}
-      NGO_HOSTNAME: ${NGO_HOSTNAME}
     healthcheck:
       test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 90s
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.keycloak.rule: "Host(`${IDENTITY_HOSTNAME}`)"
-      traefik.http.routers.keycloak.service: keycloak
-      traefik.http.routers.keycloak.entrypoints: web,websecure
-      traefik.http.services.keycloak.loadbalancer.server.port: "8080"  
-      traefik.http.routers.keycloak.tls: "true"
-      traefik.http.routers.keycloak.tls.certresolver: letsencrypt
-      traefik.http.services.keycloak.loadbalancer.passhostheader: "true"
-      docker_compose_diagram.cluster: "Auth"  
-      docker_compose_diagram.icon: "keycloak.png"
-    restart: unless-stopped
-    # for development we use the backend repository's keycloak folder
-    volumes:
-      - ./backend/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
-      - ./backend/keycloak/themes:/opt/keycloak/themes:ro
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
-      traefik:
-        condition: service_healthy
-        restart: true
     <<: *generic
 
-
-  ## Web components
-  nginx:         # WEB SERVER
-    image: openresty/openresty:${NGINX_IMAGE_TAG}
-    environment:
-      - MIGRANTS_HOSTNAME=${MIGRANTS_HOSTNAME}
-      - PA_HOSTNAME=${PA_HOSTNAME}
-      - NGO_HOSTNAME=${NGO_HOSTNAME}
-      - ANALYTIC_HOSTNAME=${ANALYTIC_HOSTNAME}
-      - RASA_HOSTNAME=${RASA_HOSTNAME}
-      - BOT_NAME=${BOT_NAME}
-      - NGINX_PORT=80
-    command: ["/run.sh"]
-    volumes:
-      #      - $PWD/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - $PWD/nginx/run.sh:/run.sh
-      - $PWD/nginx/customcss:/usr/share/nginx/html/customcss
-      - $PWD/nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf.template
-      #      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template
-      - type: volume
-        source: data_site_migrant
-        target: /usr/share/nginx/html/migrants
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: data_site_pa
-        target: /usr/share/nginx/html/pa
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: data_site_ngo
-        target: /usr/share/nginx/html/ngo
-        read_only: true
-        volume:
-          nocopy: true
-      - type: volume
-        source: shared_images
-        target: /usr/share/nginx/html/images
-        read_only: true
-        volume:
-          nocopy: true
-    labels:
-      com.centurylinklabs.watchtower.enable: "false"
-      traefik.enable: "true"
-      traefik.http.routers.nginx.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      traefik.http.routers.nginx.entrypoints: web
-      traefik.http.routers.nginx.service: nginx
-      traefik.http.routers.nginx.middlewares: redirect@file
-      traefik.http.middlewares.redirect.redirectscheme.scheme: https
-      traefik.http.services.nginx.loadbalancer.server.port: 80
-      traefik.http.routers.nginx2.rule: Host(`${MIGRANTS_HOSTNAME}`)
-      traefik.http.routers.nginx2.entrypoints: websecure
-      traefik.http.routers.nginx2.tls: "true"
-      traefik.http.routers.nginx2.tls.certresolver: letsencrypt
-      traefik.http.routers.nginx2.service: nginx2
-      traefik.http.services.nginx2.loadbalancer.server.port: 80
-      traefik.http.routers.nginx3.rule: Host(`${PA_HOSTNAME}`)
-      traefik.http.routers.nginx3.entrypoints: web
-      traefik.http.routers.nginx3.service: nginx3
-      traefik.http.routers.nginx3.middlewares: redirect@file
-      traefik.http.middlewares.redirect_pa.redirectscheme.scheme: https
-      traefik.http.services.nginx3.loadbalancer.server.port: 80
-      traefik.http.routers.nginx4.rule: Host(`${PA_HOSTNAME}`)
-      traefik.http.routers.nginx4.entrypoints: websecure
-      traefik.http.routers.nginx4.tls: "true"
-      traefik.http.routers.nginx4.tls.certresolver: letsencrypt
-      traefik.http.routers.nginx4.service: nginx4
-      traefik.http.services.nginx4.loadbalancer.server.port: 80
-      traefik.http.routers.nginx5.rule: Host(`${NGO_HOSTNAME}`)
-      traefik.http.routers.nginx5.entrypoints: web
-      traefik.http.routers.nginx5.service: nginx5
-      traefik.http.routers.nginx5.middlewares: redirect@file
-      traefik.http.middlewares.redirect_ngo.redirectscheme.scheme: https
-      traefik.http.services.nginx5.loadbalancer.server.port: 80
-      traefik.http.routers.nginx6.rule: Host(`${NGO_HOSTNAME}`)
-      traefik.http.routers.nginx6.entrypoints: websecure
-      traefik.http.routers.nginx6.tls: true"
-      traefik.http.routers.nginx6.tls.certresolver: myresolver
-      traefik.http.routers.nginx6.service: nginx6
-      traefik.http.services.nginx6.loadbalancer.server.port: 80
-      docker_compose_diagram.cluster: MICADO Frontend
-      docker_compose_diagram.icon: "diagrams.onprem.network.Nginx"
-    depends_on:
-      traefik:
-        condition: service_healthy
-        restart: true
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "-v", "http://nginx/healthcheck.html"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-    <<: *generic
-
+  # Web components
   traefik:              # LOAD BALANCER
     image: traefik:${TRAEFIK_IMAGE_TAG}
     command:
@@ -309,6 +215,8 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedByDefault=false"
+      - "--providers.file.directory=/configuration/conf"
+      - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
@@ -316,34 +224,27 @@ services:
       - "--global.sendAnonymousUsage=false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/:/configuration/
       - traefik-certificates:/etc/traefik/acme
     ports:
       - "80:80"
       - "443:443"
     healthcheck:
-      test: ["CMD", "wget", "http://localhost:8082/ping","--spider"]
+      test: traefik healthcheck --ping
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 5s
+    environment:
+      TRAEFIK_HOSTNAME: ${TRAEFIK_HOSTNAME}
     labels:
       traefik.enable: "true"
       traefik.http.routers.dashboard.rule: Host(`${TRAEFIK_HOSTNAME}`)
       traefik.http.routers.dashboard.service: api@internal
       traefik.http.routers.dashboard.entrypoints: web,websecure
       traefik.http.services.dashboard.loadbalancer.server.port: 8080
- #     - "traefik.http.routers.dashboard.tls=true"
- #     - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
- #     - "traefik.http.services.dashboard.loadbalancer.passhostheader=true"
-#      - "traefik.http.routers.dashboard.middlewares=authtraefik"
-#      - "traefik.http.middlewares.authtraefik.basicauth.users=${TRAEFIK_BASIC_AUTH}"
-#      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
-#      - "traefik.http.routers.http-catchall.entrypoints=web"
- #     - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
- #     - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       docker_compose_diagram.cluster: Load Balancer
       docker_compose_diagram.icon: "diagrams.onprem.network.Traefik"
-    restart: unless-stopped
     <<: *generic
 
 
@@ -359,13 +260,41 @@ services:
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
       BOT_NAME: ${BOT_NAME}
-    image: ghcr.io/micado-eu/migrant_application:${MIGRANTS_IMAGE_TAG}
-    pull_policy: always
+    image: ghcr.io/micado-eu/quasar:2024
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: migrants_app
+        target: /code
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
     labels:
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_migrant:/var/www/html
+      traefik.enable: "true"
+      traefik.http.routers.migrant.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      traefik.http.routers.migrant.entrypoints: web
+      traefik.http.routers.migrant.service: migrant
+      traefik.http.routers.migrant.middlewares: redirect-migrant
+      traefik.http.middlewares.redirect-migrant.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-migrant.redirectscheme.scheme: https
+      traefik.http.services.migrant.loadbalancer.server.port: 8080
+      traefik.http.routers.migrant2.rule: Host(`${MIGRANTS_HOSTNAME}`)
+      traefik.http.routers.migrant2.entrypoints: websecure
+      traefik.http.routers.migrant2.tls: "true"
+      #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
+      traefik.http.routers.migrant2.service: migrant2
+      traefik.http.services.migrant2.loadbalancer.server.port: 8080
+    depends_on:
+      micado_db:
+        condition: service_healthy
+        restart: true
+      traefik:
+        condition: service_healthy
+        restart: true
     <<: *generic
 
   data_pa:
@@ -376,15 +305,37 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
+      COUNTLY_PA_APP_KEY: ${COUNTLY_PA_APP_KEY}
       IDENTITY_SP_PA_CLIENT_ID: ${IDENTITY_SP_PA_CLIENT_ID}
       PA_HOSTNAME: ${PA_HOSTNAME}
-    image: ghcr.io/micado-eu/pa_application:${PA_IMAGE_TAG}
-    pull_policy: always
+    image: ghcr.io/micado-eu/quasar:2024
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: pa_app
+        target: /code
+    ports:
+      - "8001:8000"
+      - "8081:8080"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
     labels:
+      traefik.enable: "true"
+      traefik.http.routers.pa.rule: Host(`${PA_HOSTNAME}`)
+      traefik.http.routers.pa.entrypoints: web
+      traefik.http.routers.pa.service: pa
+      traefik.http.routers.pa.middlewares: redirect-pa
+      traefik.http.middlewares.redirect-pa.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-pa.redirectscheme.scheme: https
+      traefik.http.services.pa.loadbalancer.server.port: 8080
+      traefik.http.routers.pa2.rule: Host(`${PA_HOSTNAME}`)
+      traefik.http.routers.pa2.entrypoints: websecure
+      traefik.http.routers.pa2.tls: "true"
+      #traefik.http.routers.pa2.tls.certresolver: letsencrypt
+      traefik.http.routers.pa2.service: pa2
+      traefik.http.services.pa2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_pa:/var/www/html
     <<: *generic
 
   data_ngo:
@@ -395,22 +346,48 @@ services:
       API_HOSTNAME: ${API_HOSTNAME}
       ANALYTIC_HOSTNAME: ${ANALYTIC_HOSTNAME}
       IDENTITY_HOSTNAME: ${IDENTITY_HOSTNAME}
+      COUNTLY_NGO_APP_KEY: ${COUNTLY_NGO_APP_KEY}
       IDENTITY_SP_NGO_CLIENT_ID: ${IDENTITY_SP_NGO_CLIENT_ID}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
-    image: micadoproject/ngo_app_site:latest
-    pull_policy: always
+    image: ghcr.io/micado-eu/quasar:2024
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: migrants_app
+        target: /code
+    ports:
+      - "8002:8000"
+      - "8082:8080"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
     labels:
+      traefik.enable: "true"
+      traefik.http.routers.ngo.rule: Host(`${NGO_HOSTNAME}`)
+      traefik.http.routers.ngo.entrypoints: web
+      traefik.http.routers.ngo.service: ngo
+      traefik.http.routers.ngo.middlewares: redirect-ngo
+      traefik.http.middlewares.redirect-ngo.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-ngo.redirectscheme.scheme: https
+      traefik.http.services.ngo.loadbalancer.server.port: 8080
+      traefik.http.routers.ngo2.rule: Host(`${NGO_HOSTNAME}`)
+      traefik.http.routers.ngo2.entrypoints: websecure
+      traefik.http.routers.ngo2.tls: "true"
+      #traefik.http.routers.ngo2.tls.certresolver: letsencrypt
+      traefik.http.routers.ngo2.service: ngo2
+      traefik.http.services.ngo2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    volumes:
-      - data_site_ngo:/var/www/html
     <<: *generic
 
 
   # BACKEND COMPONENTS
   backend:
-    image: ghcr.io/micado-eu/backend:${MICADO_BACKEND_IMAGE_TAG}
-    pull_policy: always
+    image: micadoproject/micado_backend:18.19.1
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+    command: /bin/sh -c "bash"
     env_file:
       - .env
     environment:
@@ -446,12 +423,17 @@ services:
       - type: volume
         source: translations_dir
         target: ${MICADO_TRANSLATIONS_DIR}
+      - type: volume
+        source: backend
+        target: /code
     labels:
       com.centurylinklabs.watchtower.enable: "false" 
       traefik.enable: "true"
       traefik.http.routers.backend.rule: Host(`${API_HOSTNAME}`)
       traefik.http.routers.backend.entrypoints: web
-      traefik.http.routers.backend.middlewares: redirect@file
+      traefik.http.routers.backend.middlewares: redirect-backend
+      traefik.http.middlewares.redirect-backend.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-backend.redirectscheme.scheme: https
       traefik.http.routers.backend.service: backend_service
       traefik.http.services.backend_service.loadbalancer.server.port: 3000
       traefik.http.routers.backend_https.rule: Host(`${API_HOSTNAME}`)
@@ -469,13 +451,10 @@ services:
       traefik.http.middlewares.backendcors.headers.addvaryheader: "true"    
       docker_compose_diagram.cluster: MICADO Backend
       docker_compose_diagram.icon: "diagrams.programming.language.Nodejs"
-    restart: unless-stopped
     depends_on:
       micado_db:
         condition: service_healthy
         restart: true
-    #    ports:
-    #      - "3001:3000"
     <<: *generic
 
   git:               # GIT SERVER
@@ -515,13 +494,12 @@ services:
         condition: service_healthy
         restart: true
 
-  #      
   weblate:
     image: weblate/weblate:${WEBLATE_IMAGE_TAG}
     volumes:
       - weblate_data:/app/data
-      - ./weblate/0007_use_trigram.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0007_use_trigram.py
-      - ./weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
+      - ./backend/weblate/0007_use_trigram.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0007_use_trigram.py
+      - ./backend/weblate/0008_adjust_similarity.py:/usr/local/lib/python3.7/dist-packages/weblate/memory/migrations/0008_adjust_similarity.py
     environment:
       WEBLATE_EMAIL_HOST: ${WEBLATE_EMAIL_HOST}
       WEBLATE_EMAIL_HOST_USER: ${WEBLATE_EMAIL_HOST_USER}
@@ -548,9 +526,9 @@ services:
       traefik.http.routers.weblate.rule: Host(`${TRANSLATION_HOSTNAME}`)
       traefik.http.routers.weblate.entrypoints: web
       #      - "traefik.http.routers.weblate.service=weblate"
-     # - "traefik.http.routers.weblate.middlewares=redirect@file"
-      #      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
-      #      - "traefik.http.services.weblate.loadbalancer.server.port=8080"
+      traefik.http.routers.weblate.middlewares: redirect-weblate
+      traefik.http.middlewares.redirect-weblate.redirectscheme.scheme: https
+      traefik.http.services.weblate.loadbalancer.server.port: 8080
       traefik.http.routers.weblate2.rule: Host(`${TRANSLATION_HOSTNAME}`)
       traefik.http.routers.weblate2.entrypoints: websecure
       traefik.http.routers.weblate2.tls: "true"
@@ -570,7 +548,6 @@ services:
 
   cache:
     image: redis:${REDIS_IMAGE_TAG}
-    restart: always
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
@@ -588,7 +565,6 @@ services:
 # ADMIN COMPONENTS
   portainer:
     image: portainer/portainer-ce:${PORTAINER_IMAGE_TAG}
-    container_name: portainer
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -631,24 +607,6 @@ volumes:
       type: none
       device: $PWD/backend/db_init
       o: bind
-  # chatbot_action:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/rasa/actions
-  #     o: bind
-  # chatbot_data:
-  #   driver: local
-  #   driver_opts:
-  #     type: none
-  #     device: $PWD/rasa
-  #     o: bind
-  data_site_migrant:
-    driver: local
-  data_site_pa:
-    driver: local
-  data_site_ngo:
-    driver: local
   weblate_data:
     driver: local
     driver_opts:
@@ -677,26 +635,50 @@ volumes:
       type: none
       device: $PWD/shared_images
       o: bind
+  translations_dir:
+    driver_opts:
+      type: none
+      device: $PWD/translations_dir
+      o: bind
+  backend:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/backend/application
+      o: bind
+  migrants_app:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/migrant_application/app
+      o: bind
+  pa_app:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/pa_application/app
+      o: bind
+  ngo_app:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/ngo_application/app
+      o: bind
   traefik-certificates:
     driver: local
     driver_opts:
       type: none
       device: $PWD/traefik/traefik-acme
       o: bind
-  translations_dir:
-    driver_opts:
-      type: none
-      device: $PWD/translations_dir
-      o: bind
 
 
 networks:
-  micado_net:
+  micado_dev_net:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 172.24.0.0/16
+        - subnet: 172.26.0.0/16
 ```
 
 ## Development strategy
