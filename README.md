@@ -698,6 +698,14 @@ To cleanup the development environment since the docker containers create some f
 sudo rm -fr * .*
 ```
 
+## Production differences
+The production deployment has some differences that the developer must acknowledge: in production the Vue.JS applications will be stored as a distribution of javascript files in their own image and that content is copied in the NGINX container that will serve them.
+For this reason in the production docker-compose there is also the NGINX service and the 3 services of the applications will only be the one that will copy the content of the javascript distribution into the NGINX; thus all the labels for the traefik balancer will be in the NGINX service instead.
+Also in the development environment the 3 vue.js applications are exposed with their alias by Traefik and also directly with their ports, in this case the ports are:
+8080 - migrant application
+8081 - pa application
+8082 - ngo application
+
 ## Contribution
 
 Please submit pull requests or open issues to contribute to this repository.
