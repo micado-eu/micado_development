@@ -130,12 +130,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    healthcheck:
-      test: traefik healthcheck --ping
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
     environment:
       TRAEFIK_HOSTNAME: ${TRAEFIK_HOSTNAME}
     labels:
@@ -189,13 +183,6 @@ services:
       #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
       traefik.http.routers.migrant2.service: migrant2
       traefik.http.services.migrant2.loadbalancer.server.port: 8080
-    depends_on:
-      micado_db:
-        condition: service_healthy
-        restart: true
-      traefik:
-        condition: service_healthy
-        restart: true
     <<: *generic
 
   data_pa:
