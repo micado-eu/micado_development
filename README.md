@@ -220,7 +220,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
-      - "--global.checkNewVersion=true"
+      - "--global.checkNewVersion=false"
       - "--global.sendAnonymousUsage=false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -680,6 +680,10 @@ networks:
       config:
         - subnet: 172.26.0.0/16
 ```
+### Docker Network Configuration
+
+The Docker network configuration uses a bridge network named `micado_dev_net`:
+This network allows the containers to communicate with each other using internal DNS, which resolves container names to their respective IP addresses within the network. This setup is crucial for the integrated services to interact seamlessly, such as the database service (`micado_db`), Keycloak for identity management, Traefik for reverse proxying, and other application services.
 
 ## Development strategy
 This structure allows the developer to leverage on the folders of the existing MICADO's projects so that it will not be duplicated.
@@ -698,13 +702,20 @@ To cleanup the development environment since the docker containers create some f
 sudo rm -fr * .*
 ```
 
-## Production differences
-The production deployment has some differences that the developer must acknowledge: in production the Vue.JS applications will be stored as a distribution of javascript files in their own image and that content is copied in the NGINX container that will serve them.
-For this reason in the production docker-compose there is also the NGINX service and the 3 services of the applications will only be the one that will copy the content of the javascript distribution into the NGINX; thus all the labels for the traefik balancer will be in the NGINX service instead.
-Also in the development environment the 3 vue.js applications are exposed with their alias by Traefik and also directly with their ports, in this case the ports are:
-8080 - migrant application
-8081 - pa application
-8082 - ngo application
+## Production Differences
+
+### Development Environment
+
+In the development environment, the Vue.js applications (migrant, pa, and ngo) are directly exposed by Traefik and are accessible on their respective ports:
+
+- Migrant application: `8080`
+- PA application: `8081`
+- NGO application: `8082`
+
+### Production Environment
+
+In the production environment, the Vue.js applications are built and served as static files by an NGINX server. The Docker Compose configuration includes an NGINX service that serves the built JavaScript files. Consequently, the applications' services in the production setup primarily handle copying the static content into the NGINX container, and the Traefik configuration is adapted to route traffic through the NGINX service.
+
 
 ## Contribution
 
