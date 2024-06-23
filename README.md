@@ -716,6 +716,19 @@ In the development environment, the Vue.js applications (migrant, pa, and ngo) a
 
 In the production environment, the Vue.js applications are built and served as static files by an NGINX server. The Docker Compose configuration includes an NGINX service that serves the built JavaScript files. Consequently, the applications' services in the production setup primarily handle copying the static content into the NGINX container, and the Traefik configuration is adapted to route traffic through the NGINX service.
 
+## Managing Keycloak
+Keycloak import realms can be found in the `backend/keycloak/realms` folder.
+If there is a need to modify a realm, the following command can be used from inside the container:
+
+```
+docker compose exec -it keycloak bash
+/opt/keycloak/bin/kc.sh export --dir /tmp --users realm_file
+```
+This will generate a file named `X-realm.json` in the `/tmp` folder that can be copyed outside the container with the following command:
+
+```
+docker compose cp keycloak:/tmp/pa-realm.json pa-realm.json
+```
 
 ## Contribution
 
