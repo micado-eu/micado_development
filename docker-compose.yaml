@@ -68,6 +68,7 @@ services:
       NGO_REALM_CLIENT_SECRET: ${NGO_REALM_CLIENT_SECRET}
       MIGRANT_REALM_CLIENT_SECRET: ${MIGRANT_REALM_CLIENT_SECRET}
       PA_REALM_CLIENT_SECRET: ${PA_REALM_CLIENT_SECRET}
+      MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
     healthcheck:
       test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
       interval: 10s
@@ -155,6 +156,7 @@ services:
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
       BOT_NAME: ${BOT_NAME}
+      MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
     image: ghcr.io/micado-eu/quasar:2024
     stdin_open: true
     tty: true
@@ -196,6 +198,7 @@ services:
       COUNTLY_PA_APP_KEY: ${COUNTLY_PA_APP_KEY}
       IDENTITY_SP_PA_CLIENT_ID: ${IDENTITY_SP_PA_CLIENT_ID}
       PA_HOSTNAME: ${PA_HOSTNAME}
+      MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
     image: ghcr.io/micado-eu/quasar:2024
     stdin_open: true
     tty: true
@@ -237,6 +240,7 @@ services:
       COUNTLY_NGO_APP_KEY: ${COUNTLY_NGO_APP_KEY}
       IDENTITY_SP_NGO_CLIENT_ID: ${IDENTITY_SP_NGO_CLIENT_ID}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
+      MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
     image: ghcr.io/micado-eu/quasar:2024
     stdin_open: true
     tty: true
@@ -281,9 +285,6 @@ services:
     environment:
       HOST: backend
       MICADO_GIT_URL: ${MICADO_GIT_URL}
-      ROCKETCHAT_HOSTNAME: ${ROCKETCHAT_HOSTNAME}
-      ROCKETCHAT_ADMIN: ${ROCKETCHAT_ADMIN}
-      ROCKETCHAT_ADMIN_PWD: ${ROCKETCHAT_ADMIN_PWD}
       MICADO_TRANSLATIONS_DIR: ${MICADO_TRANSLATIONS_DIR}
       POSTGRES_DB: ${POSTGRES_DB}
       MICADO_DB_PWD: ${MICADO_DB_PWD}
@@ -303,6 +304,7 @@ services:
       BUFFER_1: ${BUFFER_1}
       ALGORITHM_PASSWORD: ${ALGORITHM_PASSWORD}
       MICADO_WEBLATE_KEY: ${MICADO_WEBLATE_KEY}
+      MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - type: volume
