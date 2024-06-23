@@ -206,7 +206,7 @@ services:
     ports:
       - "8001:8000"
       - "8081:8080"
-    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev"
     labels:
       traefik.enable: "true"
       traefik.http.routers.pa.rule: Host(`${PA_HOSTNAME}`)
@@ -247,7 +247,7 @@ services:
     ports:
       - "8002:8000"
       - "8082:8080"
-    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev -m pwa"
+    command: /bin/sh -c "envsubst < src/statics/config.tmpl.json > src/statics/config.json && npm install && quasar dev"
     labels:
       traefik.enable: "true"
       traefik.http.routers.ngo.rule: Host(`${NGO_HOSTNAME}`)
