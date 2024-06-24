@@ -65,6 +65,7 @@ services:
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       PA_HOSTNAME: ${PA_HOSTNAME}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
+      API_HOSTNAME: ${API_HOSTNAME}
       NGO_REALM_CLIENT_SECRET: ${NGO_REALM_CLIENT_SECRET}
       MIGRANT_REALM_CLIENT_SECRET: ${MIGRANT_REALM_CLIENT_SECRET}
       PA_REALM_CLIENT_SECRET: ${PA_REALM_CLIENT_SECRET}
@@ -79,14 +80,29 @@ services:
       traefik.enable: "true"
       traefik.http.routers.keycloak.rule: "Host(`${IDENTITY_HOSTNAME}`)"
       traefik.http.routers.keycloak.service: keycloak
-      traefik.http.routers.keycloak.entrypoints: web,websecure
+      traefik.http.routers.keycloak.entrypoints: web
       traefik.http.services.keycloak.loadbalancer.server.port: "8080"  
       traefik.http.routers.keycloak.middlewares: redirect-keycloak
       traefik.http.middlewares.redirect-keycloak.redirectscheme.permanent: "true"
       traefik.http.middlewares.redirect-keycloak.redirectscheme.scheme: https
-      traefik.http.routers.keycloak.tls: "true"
+#      traefik.http.routers.keycloak.tls: "true"
       #traefik.http.routers.keycloak.tls.certresolver: letsencrypt
       traefik.http.services.keycloak.loadbalancer.passhostheader: "true"
+      traefik.http.routers.keycloak_https.rule: Host(`${IDENTITY_HOSTNAME}`)
+      traefik.http.routers.keycloak_https.entrypoints: websecure
+      traefik.http.routers.keycloak_https.tls: "true"
+      #traefik.http.routers.keycloak_https.tls.certresolver: letsencrypt
+      traefik.http.routers.keycloak_https.service: keycloak_service_https
+      traefik.http.services.keycloak_https.loadbalancer.passhostheader: "true"
+      traefik.http.services.keycloak_service_https.loadbalancer.server.port: 8080
+      traefik.http.services.keycloak_service_https.loadbalancer.server.scheme: http
+      traefik.http.routers.keycloak_https.middlewares: keycloakcors
+      traefik.http.middlewares.keycloakcors.headers.accesscontrolallowmethods: "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+      traefik.http.middlewares.keycloakcors.headers.accesscontrolallowheaders: "*"
+      traefik.http.middlewares.keycloakcors.headers.accesscontrolalloworiginlist: "https://${MIGRANTS_HOSTNAME},http://${MIGRANTS_HOSTNAME},https://${PA_HOSTNAME},http://${PA_HOSTNAME},https://${NGO_HOSTNAME},http://${NGO_HOSTNAME},https://${API_HOSTNAME},http://${API_HOSTNAME}"
+      #traefik.http.middlewares.keycloakcors.headers.allowedHosts: "https://${MIGRANTS_HOSTNAME},http://${MIGRANTS_HOSTNAME},https://${PA_HOSTNAME},http://${PA_HOSTNAME},https://${NGO_HOSTNAME},http://${NGO_HOSTNAME},https://${API_HOSTNAME},http://${API_HOSTNAME},https://${IDENTITY_HOSTNAME},http://${IDENTITY_HOSTNAME}"
+      traefik.http.middlewares.keycloakcors.headers.accessControlAllowCredentials: "true"
+      traefik.http.middlewares.keycloakcors.headers.accesscontrolmaxage: 100
       docker_compose_diagram.cluster: "Auth"  
       docker_compose_diagram.icon: "keycloak.png"
     restart: unless-stopped
@@ -185,6 +201,10 @@ services:
       #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
       traefik.http.routers.migrant2.service: migrant2
       traefik.http.services.migrant2.loadbalancer.server.port: 8080
+    depends_on:
+      micado_db:
+        condition: service_healthy
+        restart: true
     <<: *generic
 
   data_pa:
@@ -227,6 +247,10 @@ services:
       traefik.http.services.pa2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
+    depends_on:
+      micado_db:
+        condition: service_healthy
+        restart: true
     <<: *generic
 
   data_ngo:
@@ -269,12 +293,17 @@ services:
       traefik.http.services.ngo2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
+    depends_on:
+      micado_db:
+        condition: service_healthy
+        restart: true
     <<: *generic
 
 
   # BACKEND COMPONENTS
   backend:
     image: micadoproject/micado_backend:18.19.1
+    hostname: backend
     stdin_open: true
     tty: true
     ports:
@@ -334,7 +363,7 @@ services:
       traefik.http.services.backend_service_https.loadbalancer.server.port: 3000
       traefik.http.services.backend_service_https.loadbalancer.server.scheme: http
       traefik.http.routers.backend_https.middlewares: backendcors
-      traefik.http.middlewares.backendcors.headers.accesscontrolallowmethods: GET,OPTIONS,PUT
+      traefik.http.middlewares.backendcors.headers.accesscontrolallowmethods: GET,OPTIONS,PUT,POST
       traefik.http.middlewares.backendcors.headers.accesscontrolallowheaders: "*"
       traefik.http.middlewares.backendcors.headers.accesscontrolalloworiginlist: "*"
       traefik.http.middlewares.backendcors.headers.accesscontrolmaxage: 100
