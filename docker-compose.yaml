@@ -170,7 +170,7 @@ services:
       IDENTITY_SP_MIGRANTS_CLIENT_ID: ${IDENTITY_SP_MIGRANTS_CLIENT_ID}
       MIGRANTS_HOSTNAME: ${MIGRANTS_HOSTNAME}
       MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
-    image: ghcr.io/micado-eu/quasar:2024
+    image: ghcr.io/micado-eu/quasar:${MIGRANTS_IMAGE_TAG}
     stdin_open: true
     tty: true
     volumes:
@@ -214,7 +214,7 @@ services:
       IDENTITY_SP_PA_CLIENT_ID: ${IDENTITY_SP_PA_CLIENT_ID}
       PA_HOSTNAME: ${PA_HOSTNAME}
       MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
-    image: ghcr.io/micado-eu/quasar:2024
+    image: ghcr.io/micado-eu/quasar:${PA_IMAGE_TAG}
     stdin_open: true
     tty: true
     volumes:
@@ -258,7 +258,7 @@ services:
       IDENTITY_SP_NGO_CLIENT_ID: ${IDENTITY_SP_NGO_CLIENT_ID}
       NGO_HOSTNAME: ${NGO_HOSTNAME}
       MICADO_KC_REALM_ADMIN_PASSWORD: ${MICADO_KC_REALM_ADMIN_PASSWORD}
-    image: ghcr.io/micado-eu/quasar:2024
+    image: ghcr.io/micado-eu/quasar:${MIGRANTS_IMAGE_TAG}
     stdin_open: true
     tty: true
     volumes:

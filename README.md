@@ -7,12 +7,14 @@ This repository contains the necessary components for setting up and developing 
 ```
 micado_development/
 ├── clone_micado_development.sh
+├── create_micado_ca_and_micado_local_cert.sh
 ├── setup_micado_repos.sh
 ├── .env
 └── docker-compose.yaml
 ```
 
 - **clone_micado_development.sh**: Script to clone the micado_development repository and execute the setup script.
+- **create_micado_ca_and_micado_local_cert.sh**: Script to create a local CA certificate and a local certificate for the Micado project.
 - **setup_micado_repos.sh**: Script to clone additional repositories and create required directories.
 - **.env**: Environment variables file for Docker Compose.
 - **docker-compose.yaml**: Docker Compose configuration file.
@@ -36,6 +38,8 @@ This script will:
 2. Change into the `micado_development` directory.
 3. Make the `setup_micado_repos.sh` script executable.
 4. Execute the `setup_micado_repos.sh` script to set up additional repositories and directories.
+5. Make the `create_micado_ca_and_micado_local_cert.sh` script executable.
+6. Execute the `create_micado_ca_and_micado_local_cert.sh` script to create a local CA certificate and a local certificate for the Micado project.
 
 The `setup_micado_repos.sh` script will:
 1. Clone the following repositories:
@@ -83,9 +87,11 @@ micado_development/
 - **.env**: Environment variables file for Docker Compose.
 - **docker-compose.yaml**: Docker Compose configuration file.
 
+**ATTENTION**: The `setup_micado_repos.sh` script will clone the repositories from the master branch. If you want to clone a specific branch, you can modify the script accordingly or will have to clone the branches manually.
+
 ## Environment Variables
 
-The `.env` file contains environment variables used by Docker Compose. Below is an example of the `.env` file:
+The `.env` file contains environment variables used by Docker Compose. Below is an **example** of the `.env` file, but this file will be created by cloning the repo so do not create it by hand:
 
 ```
 # .env file
@@ -104,6 +110,7 @@ REDIS_IMAGE_TAG=latest
 PORTAINER_IMAGE_TAG=latest
 MIGRANTS_IMAGE_TAG=latest
 PA_IMAGE_TAG=latest
+NGO_IMAGE_TAG=latest
 API_HOSTNAME=api.micado.local
 IDENTITY_HOSTNAME=identity.micado.local
 MIGRANTS_HOSTNAME=migrants.micado.local
