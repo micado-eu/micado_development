@@ -295,7 +295,7 @@ services:
 
   # BACKEND COMPONENTS
   backend:
-    image: micadoproject/micado_backend:18.19.1
+    image: ghcr.io/micado-eu/micado_backend:${BACKEND_IMAGE_TAG}
     hostname: backend
     stdin_open: true
     tty: true
