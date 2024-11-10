@@ -105,7 +105,6 @@ services:
       traefik.http.middlewares.keycloakcors.headers.accesscontrolmaxage: 100
       docker_compose_diagram.cluster: "Auth"  
       docker_compose_diagram.icon: "keycloak.png"
-    restart: unless-stopped
     # for development we use the backend repository's keycloak folder
     volumes:
       - ./backend/keycloak/realms:/opt/keycloak/data/import
@@ -113,7 +112,6 @@ services:
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
     <<: *generic
 
 
@@ -198,10 +196,6 @@ services:
       #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
       traefik.http.routers.migrant2.service: migrant2
       traefik.http.services.migrant2.loadbalancer.server.port: 8080
-    depends_on:
-      micado_db:
-        condition: service_healthy
-        restart: true
     <<: *generic
 
   data_pa:
@@ -242,10 +236,6 @@ services:
       traefik.http.services.pa2.loadbalancer.server.port: 8080
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
-    depends_on:
-      micado_db:
-        condition: service_healthy
-        restart: true
     <<: *generic
 
   data_ngo:
@@ -289,13 +279,12 @@ services:
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
     <<: *generic
 
 
   # BACKEND COMPONENTS
   backend:
-    image: ghcr.io/micado-eu/micado_backend:${BACKEND_IMAGE_TAG}
+    image: ghcr.io/micado-eu/micado-backend:${BACKEND_IMAGE_TAG}
     hostname: backend
     stdin_open: true
     tty: true
@@ -365,12 +354,10 @@ services:
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
     <<: *generic
 
   git:               # GIT SERVER
     image: gitea/gitea:${GITEA_IMAGE_TAG}
-    <<: *generic
     environment:
       GIT_HOSTNAME: ${GIT_HOSTNAME}
       GITEA__database__DB_TYPE: postgres
@@ -403,7 +390,7 @@ services:
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
+    <<: *generic
 
   weblate:
     image: weblate/weblate:${WEBLATE_IMAGE_TAG}
@@ -451,10 +438,8 @@ services:
     depends_on:
       micado_db:
         condition: service_healthy
-        restart: true
       cache:
         condition: service_healthy
-        restart: true
     <<: *generic
 
   cache:
