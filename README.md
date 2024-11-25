@@ -107,6 +107,19 @@ This structure allows the developer to leverage on the folders of the existing M
 If there is the need to only develop the backend application the developer can use the docker-compose.yml file in the backend folder and work in it.
 In case he needs to develop the integration between one frontend and the backend, the developer can use the docker-compose.yml file in this folder and work in it knowing that all the services will mount the code of the specific repo.  In this way any fix done will be in the source code of the specific repo and can be committed accordingly.
 
+Typically the developer will work on only one application at the time.
+To do so the needed services and relative command is as follows (example for the migrant application):
+```
+docker compose up traefik micado_db keycloak data_migrants backend
+```
+After there will be the need to start the backend application:
+```
+docker compose exec backend /bin/bash
+cd micado-backend/
+npm install
+npm start
+```
+
 ## Database Initialization
 
 The will be initialized using the folder in the backend/db_init folder from the backend repo that is used as the authoritative source of the data.
