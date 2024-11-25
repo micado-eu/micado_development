@@ -181,7 +181,7 @@ services:
       traefik.http.routers.migrant.rule: Host(`${MIGRANTS_HOSTNAME}`)
       traefik.http.routers.migrant.entrypoints: web
       traefik.http.routers.migrant.service: migrant
-      traefik.http.routers.migrant.middlewares: redirect-migrant
+      traefik.http.routers.migrant.middlewares: redirect-migrant,devheader
       traefik.http.middlewares.redirect-migrant.redirectscheme.permanent: "true"
       traefik.http.middlewares.redirect-migrant.redirectscheme.scheme: https
       traefik.http.services.migrant.loadbalancer.server.port: 8080
@@ -191,6 +191,11 @@ services:
       #traefik.http.routers.migrant2.tls.certresolver: letsencrypt
       traefik.http.routers.migrant2.service: migrant2
       traefik.http.services.migrant2.loadbalancer.server.port: 8080
+      traefik.http.middlewares.devheader.headers.accesscontrolallowmethods: GET,OPTIONS,PUT,POST
+      traefik.http.middlewares.devheader.headers.accesscontrolallowheaders: '*'
+      traefik.http.middlewares.devheader.headers.accesscontrolalloworiginlist: https://${MIGRANTS_HOSTNAME},https://${MIGRANTS_HOSTNAME}:8080
+      traefik.http.middlewares.devheader.headers.accesscontrolmaxage: 100
+      traefik.http.middlewares.devheader.headers.addvaryheader: true
     <<: *generic
 
   data_pa:
@@ -218,7 +223,7 @@ services:
       traefik.http.routers.pa.rule: Host(`${PA_HOSTNAME}`)
       traefik.http.routers.pa.entrypoints: web
       traefik.http.routers.pa.service: pa
-      traefik.http.routers.pa.middlewares: redirect-pa
+      traefik.http.routers.pa.middlewares: redirect-pa,devheader
       traefik.http.middlewares.redirect-pa.redirectscheme.permanent: "true"
       traefik.http.middlewares.redirect-pa.redirectscheme.scheme: https
       traefik.http.services.pa.loadbalancer.server.port: 8080
@@ -228,6 +233,11 @@ services:
       #traefik.http.routers.pa2.tls.certresolver: letsencrypt
       traefik.http.routers.pa2.service: pa2
       traefik.http.services.pa2.loadbalancer.server.port: 8080
+      traefik.http.middlewares.devheader.headers.accesscontrolallowmethods: GET,OPTIONS,PUT,POST
+      traefik.http.middlewares.devheader.headers.accesscontrolallowheaders: '*'
+      traefik.http.middlewares.devheader.headers.accesscontrolalloworiginlist: https://${PA_HOSTNAME},https://${PA_HOSTNAME}:8080
+      traefik.http.middlewares.devheader.headers.accesscontrolmaxage: 100
+      traefik.http.middlewares.devheader.headers.addvaryheader: true
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
     <<: *generic
@@ -257,7 +267,7 @@ services:
       traefik.http.routers.ngo.rule: Host(`${NGO_HOSTNAME}`)
       traefik.http.routers.ngo.entrypoints: web
       traefik.http.routers.ngo.service: ngo
-      traefik.http.routers.ngo.middlewares: redirect-ngo
+      traefik.http.routers.ngo.middlewares: redirect-ngo,devheader
       traefik.http.middlewares.redirect-ngo.redirectscheme.permanent: "true"
       traefik.http.middlewares.redirect-ngo.redirectscheme.scheme: https
       traefik.http.services.ngo.loadbalancer.server.port: 8080
@@ -267,6 +277,11 @@ services:
       #traefik.http.routers.ngo2.tls.certresolver: letsencrypt
       traefik.http.routers.ngo2.service: ngo2
       traefik.http.services.ngo2.loadbalancer.server.port: 8080
+      traefik.http.middlewares.devheader.headers.accesscontrolallowmethods: GET,OPTIONS,PUT,POST
+      traefik.http.middlewares.devheader.headers.accesscontrolallowheaders: '*'
+      traefik.http.middlewares.devheader.headers.accesscontrolalloworiginlist: https://${NGO_HOSTNAME},https://${NGO_HOSTNAME}:8080
+      traefik.http.middlewares.devheader.headers.accesscontrolmaxage: 100
+      traefik.http.middlewares.devheader.headers.addvaryheader: true
       docker_compose_diagram.cluster: MICADO Frontend
       docker_compose_diagram.icon: "diagrams.programming.framework.Vue"
     depends_on:
